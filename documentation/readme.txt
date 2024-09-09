@@ -1,0 +1,5 @@
+- Dans le dossier " Databse_SQL " se trouve la configuration de la database liée au projet .
+- version de php utilisée:  php-8.3.4
+- version de symfony utilisée : 7
+- Par défaut , le premier utilisateur créé a un role : ROLE_ADMIN . Tous les autres ont un role : ROLE_USER .
+- Bibliothèque utilisée pour la gestion de tokens : firebase/php-jwt 

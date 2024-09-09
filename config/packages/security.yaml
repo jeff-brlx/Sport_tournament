@@ -1,0 +1,70 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        database_users:
+            entity:
+                class: App\Entity\User
+                property: userName
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: database_users
+            custom_authenticator:
+                - App\Security\JwtAuthenticator
+    role_hierarchy:
+        ROLE_ADMIN: [ ROLE_USER ]  # ROLE_ADMIN hérite des droits de ROLE_USER
+
+    access_control:
+        # Autres règles pour l'enregistrement et l'authentification
+        #- { path: ^/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        # Gestion des joueurs
+        - { path: ^/api/players$, roles: ROLE_ADMIN }
+        - { path: ^/api/players/\d+$, roles: ROLE_USER }
+        - { path: ^/api/players/\d+$, methods: [ POST] , roles: ROLE_USER }
+        - { path: ^/api/players/\d+$, methods: [ DELETE ], roles: ROLE_USER }
+
+        # Gestion des tournois
+        - { path: ^/api/tournaments$, roles: ROLE_USER }
+        - { path: ^/api/tournaments/\d+$, roles: ROLE_USER }
+        - { path: ^/api/tournaments$, methods: [ POST, DELETE ], roles: ROLE_ADMIN }
+        - { path: ^/api/tournaments/\d+$, methods: [ PUT, DELETE ], roles: ROLE_ADMIN }
+
+        # Gestion des inscriptions
+            # Autoriser uniquement les utilisateurs avec ROLE_USER à s'inscrire à un tournoi
+        - { path: ^/api/tournaments/\d+/registrations$, roles: ROLE_USER, methods: [ POST ] }
+
+        # Autoriser uniquement les administrateurs à voir les inscriptions d'un tournoi
+        - { path: ^/api/tournaments/\d+/registrations$, roles: ROLE_ADMIN, methods: [ GET ] }
+
+        # Autoriser uniquement les administrateurs à supprimer des inscriptions
+        - { path: ^/api/tournaments/\d+/registrations/\d+$, roles: ROLE_ADMIN, methods: [ DELETE ] }
+
+        # Gestion des matches
+        - { path: ^/api/tournaments/\d+/sport-matchs$, roles: ROLE_USER }
+        - { path: ^/api/tournaments/\d+/sport-matchs/\d+$, roles: ROLE_USER }
+        - { path: ^/api/tournaments/\d+/sport-matchs$, methods: [ POST, DELETE ], roles: ROLE_ADMIN }
+        - { path: ^/api/tournaments/\d+/sport-matchs/\d+$, methods: [ PUT, DELETE ], roles: ROLE_ADMIN }
+
+
+
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon
